@@ -41,8 +41,10 @@ services.AddScoped<ICourseLibraryRepository, CourseLibraryRepository>();
 
             services.AddDbContext<CourseLibraryContext>(options =>
             {
-                options.UseSqlServer(
-                    @"Server=(localdb)\mssqllocaldb;Database=CourseLibraryDB;Trusted_Connection=True;");
+                //options.UseSqlServer(
+                //    @"Server=(localdb)\mssqllocaldb;Database=CourseLibraryDB;Trusted_Connection=True;");
+
+                options.UseSqlServer("Data Source=localhost\\SQLEXPRESS;Initial Catalog=CourseLibraryDB;Integrated Security=True;MultipleActiveResultSets=True");
             }); 
 
         }
