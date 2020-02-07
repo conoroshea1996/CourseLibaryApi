@@ -7,16 +7,8 @@ using System.Threading.Tasks;
 
 namespace CourseLibrary.API.Models
 {
-    [CourseTitleMustBeDifferentFromDescriptionAttribute(ErrorMessage ="Title must be different from description.")]
-    public class CourseForCreationDto /*: IValidatableObject*/
+    public class CourseForCreationDto : CourseForManipulationDto
     {
-        [Required]
-        [MaxLength(100)]
-        public string Title { get; set; }
-        
-        [MaxLength(1500)]
-        public string Description { get; set; }
-
         //public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         //{
 
@@ -29,6 +21,8 @@ namespace CourseLibrary.API.Models
         //    }
 
         //}
-    
+
+        [Required]
+        public override string Description { get => base.Description; set => base.Description = value; }
     }
 }

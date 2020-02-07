@@ -25,7 +25,7 @@ namespace CourseLibrary.API.Controllers
         }
 
         [HttpGet("({ids})", Name ="GetAuthorCollection")]
-        public IActionResult GetAuthorCollection(
+        public async Task<IActionResult> GetAuthorCollection(
             [FromRoute] 
             [ModelBinder(BinderType =typeof(ArrayModelBinder))]
             IEnumerable<Guid> ids
@@ -35,7 +35,7 @@ namespace CourseLibrary.API.Controllers
             {
                 return BadRequest();
             }
-            var authorEntites = _courseLibaryService.GetAuthors(ids);
+            var authorEntites = await _courseLibaryService.GetAuthors(ids);
 
             if(ids.Count() != authorEntites.Count())
             {
@@ -65,8 +65,5 @@ namespace CourseLibrary.API.Controllers
 
             return CreatedAtRoute("GetAuthorCollection", new { ids = idsAsString }, authorCollectionToReturn);
         }
-
-       
-
     }
 }

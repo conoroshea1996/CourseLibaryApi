@@ -161,11 +161,64 @@ namespace CourseLibary.API.Migrations
                         });
                 });
 
+            modelBuilder.Entity("CourseLibrary.API.Entities.Student", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("Age")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Price")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.ToTable("Students");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Age = 20,
+                            CourseId = new Guid("d173e20d-159e-4127-9ce9-b0ac2564ad97"),
+                            Name = "Bob Ross",
+                            Price = 99
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Age = 22,
+                            CourseId = new Guid("d173e20d-159e-4127-9ce9-b0ac2564ad97"),
+                            Name = "Mick Ross",
+                            Price = 19
+                        });
+                });
+
             modelBuilder.Entity("CourseLibrary.API.Entities.Course", b =>
                 {
                     b.HasOne("CourseLibrary.API.Entities.Author", "Author")
                         .WithMany("Courses")
                         .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CourseLibrary.API.Entities.Student", b =>
+                {
+                    b.HasOne("CourseLibrary.API.Entities.Course", "Course")
+                        .WithMany("Students")
+                        .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

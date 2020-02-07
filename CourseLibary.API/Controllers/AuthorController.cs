@@ -29,20 +29,23 @@ namespace CourseLibrary.API.Controllers
 
         [HttpGet]
         [HttpHead]
-        public ActionResult<IEnumerable<AuthorDto>> getAuthors(
-           [FromQuery] AuthorsResourceParameters authorsResourceParameters)
+        public async Task<ActionResult<IEnumerable<AuthorDto>>> getAuthors(
+           [FromQuery] AuthorsResourceParameters authorsResourceParameters, int pageIndex = 0, int Results = 2)
         {
-            var AuthoursFromEntity = _courseLibaryService.GetAuthors(authorsResourceParameters);
+            var AuthoursFromEntity = await _courseLibaryService.GetAuthors(authorsResourceParameters);
+            AuthoursFromEntity = AuthoursFromEntity.Skip(pageIndex).Take(Results);
             var Authors = _mapper.Map<IEnumerable<AuthorDto>>(AuthoursFromEntity);
-
             return Ok(Authors);
         }
 
         [HttpGet("{AuthorId}",Name = "getAuthor")]
-        public ActionResult<AuthorDto> getAuthor(Guid AuthorId)
+        public async Task<ActionResult<AuthorDto>> getAuthor(Guid AuthorId)
         {
-            var Author = _courseLibaryService.GetAuthor(AuthorId);
-            if(Author == null)
+            var Author = await _courseLibaryService.GetAuthor(AuthorId);
+            var test =  _courseLibaryService.GetAuthor(AuthorId);
+            var x = await test;
+ 
+            if (Author == null)
             {
                 return NotFound();
             }
@@ -51,7 +54,7 @@ namespace CourseLibrary.API.Controllers
         }
 
         [HttpPost]
-        public ActionResult<AuthorDto> CreateAuthor( AuthorForCreationDto author)
+        public async Task<ActionResult<AuthorDto>> CreateAuthor( AuthorForCreationDto author)
         {
             if(author == null)
             {
@@ -59,12 +62,26 @@ namespace CourseLibrary.API.Controllers
             }
             //creating Author entity from AuthorForCreation
             var authorEntity = _mapper.Map<Author>(author);
-
             _courseLibaryService.AddAuthor(authorEntity);
-            _courseLibaryService.Save();
+            await _courseLibaryService.Save();
             var authorToReturn = _mapper.Map<AuthorDto>(authorEntity);
-
             return CreatedAtRoute("getAuthor",new { AuthorId = authorToReturn.Id }, authorToReturn);
+        }
+
+        [HttpDelete("{authorId}")]
+        public async Task<ActionResult> DeleteAuthor(Guid authorId)
+        {
+            var authorRepo = await _courseLibaryService.GetAuthor(authorId);
+
+            if(authorRepo == null)
+            {
+                return NotFound();
+            }
+
+            _courseLibaryService.DeleteAuthor(authorRepo);
+            await _courseLibaryService.Save();
+
+            return NoContent();
         }
 
         [HttpOptions]

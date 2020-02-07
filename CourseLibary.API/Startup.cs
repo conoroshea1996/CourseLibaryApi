@@ -4,11 +4,13 @@ using CourseLibrary.API.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json.Serialization;
 using System;
 
 namespace CourseLibrary.API
@@ -28,24 +30,53 @@ namespace CourseLibrary.API
             services.AddControllers(setupAction =>
             {
                 //returns error when requesting invalid response format
-                setupAction.ReturnHttpNotAcceptable = true;
+                setupAction.ReturnHttpNotAcceptable = true;                
 
                 //    setupAction.OutputFormatters.Add(
                 //        new XmlDataContractSerializerOutputFormatter());
-            }).AddXmlDataContractSerializerFormatters();
+            }).AddNewtonsoftJson(setupAction =>
+            {
+                setupAction.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+            }).AddXmlDataContractSerializerFormatters()
+               .ConfigureApiBehaviorOptions(setupAction =>
+               {
+                   setupAction.InvalidModelStateResponseFactory = context =>
+                   {
+                       var problemDetails = new ValidationProblemDetails(context.ModelState)
+                       {
+                           Type = "https://courselibrary.com/modelvalidationproblem",
+                           Title = "One or more model validation errors occurred.",
+                           Status = StatusCodes.Status422UnprocessableEntity,
+                           Detail = "See the errors property for details.",
+                           Instance = context.HttpContext.Request.Path
+                       };
+
+                       problemDetails.Extensions.Add("traceId", context.HttpContext.TraceIdentifier);
+
+                       return new UnprocessableEntityObjectResult(problemDetails)
+                       {
+                           ContentTypes = { "application/problem+json" }
+                       };
+                   };
+               })
+            ;
             //^^Adds Xml formater to http responses
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-services.AddScoped<ICourseLibraryRepository, CourseLibraryRepository>();
+            services.AddScoped<ICourseLibraryRepository, CourseLibraryRepository>();
 
             services.AddDbContext<CourseLibraryContext>(options =>
             {
                 //options.UseSqlServer(
                 //    @"Server=(localdb)\mssqllocaldb;Database=CourseLibraryDB;Trusted_Connection=True;");
 
-                options.UseSqlServer("Data Source=localhost\\SQLEXPRESS;Initial Catalog=CourseLibraryDB;Integrated Security=True;MultipleActiveResultSets=True");
-            }); 
+                options.UseSqlServer("Data Source=localhost\\SQLEXPRESS;Initial Catalog=CourseLibraryDB;Integrated Security=True;MultipleActiveResultSets=True",
+                   sqlServerOptionsAction: sqlOptions =>
+                   {
+                       sqlOptions.CommandTimeout(180);
+                   });
+            });
 
         }
 
